@@ -1,0 +1,125 @@
+D FF
+
+`timescale 1ns/1ps
+module dff(q,qbar,d,clk,reset);
+output reg q;
+output qbar;
+input d,clk,reset;
+always @(posedge clk)
+begin
+if(reset)
+q<=1'b0;
+else
+q<=d;
+end
+assign qbar=~q;
+endmodule
+
+//Test Bench
+
+`timescale 1ns/1ps
+module dff_tb;
+reg clk,d,reset;
+wire q,qbar;
+initial
+begin
+clk=1'b0;
+reset=1'b1;
+end
+dff uut(q,qbar,d,clk,reset);
+always #5 clk=~clk;
+initial
+begin
+d=1'b1;
+#10 reset=1'b0;
+#10 d=1'b0;
+#10 reset=1'b1;
+#100 $finish;
+end
+Endmodule
+
+//SDC
+set_input_delay -max 0.8 [get_ports "d"]
+set_input_delay -max 0.8 [get_ports "reset"]
+set_input_delay -max 0.8 [get_ports "clk"]
+set_output_delay -max 0.8 [get_ports "q"]
+set_output_delay -max 0.8 [get_ports "qbar"]
+set_input_transition 0.12 [all_inputs]
+set_load 0.15 [all_outputs]
+set_max_fanout 30.00 [current_design]
+
+SR -FF
+
+`timescale 1ns/1ps
+module sr_ff(s,r,clk,q,qbar);
+input s,r,clk;
+output reg q,qbar;
+always @(posedge clk)
+begin
+case({s,r})
+2'b00: begin q<=q; qbar<=qbar; end
+2'b01: begin q<=1'b0; qbar<=1'b1; end
+2'b10: begin q<=1'b1; qbar<=1'b0; end
+2'b11: begin q<=1'bz; qbar<=1'bz; end
+endcase
+end
+Endmodule
+
+`timescale 1ns/1ps
+module ss_ff_tb;
+reg clk,s,r;
+wire q,qbar;
+initial
+begin
+clk=1'b0;
+end
+sr_ff uut(s,r,clk,q,qbar);
+always
+#5 clk=~clk;
+initial
+begin
+s=1'b0;r=1'b1;
+#500 s=1'b0;r=1'b0;
+#500 s=1'b1; r=1'b0;
+#500 s=1'b1;r=1'b1;
+#500 $finish;
+end
+endmodule
+
+JK FF
+`timescale 1ns/1ps
+module jk_ff(j,k,rst,q,qbar);
+input rst,j,k;
+output reg q,qbar;
+always@(rst,j,k)
+begin
+if(rst)
+begin q<=1'b0;qbar<=1'b1; end
+else
+begin
+case({j,k})
+2'b00:begin q<=q; qbar<=qbar;end
+2'b01:begin q<=1'b0; qbar<=1'b1;end
+2'b10:begin q<=1'b1; qbar<=1'b0;end
+2'b11 :begin q<=qbar; qbar<=q;end
+endcase
+end
+end
+Endmodule
+
+`timescale 1ns/1ps
+module jk_tb;
+reg rst,j,k;
+wire q,qbar;
+jk_ff uut(j,k,rst,q,qbar);
+initial
+begin
+rst=1'b1;
+#10
+j=1'b0; k=1'b1;rst=1'b0;
+#50 j=1'b0;k=1'b0;
+#50 j=1'b1; k=1'b0;
+#50 j=1'b1;k=1'b1;
+#500 $finish;
+end
+Endmodule

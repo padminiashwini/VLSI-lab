@@ -1,0 +1,55 @@
+#Design block
+
+
+`timescale 1ns/1ps
+module upd(clk, rst, m, count); 
+input clk,rst,m;
+output reg[3:0] count;
+always @(posedge clk or negedge rst)
+begin 
+if(!rst)
+count<=0;
+else
+begin if(m)
+count<=count+1;
+else
+count<=count-1;
+end
+end
+endmodule
+
+#Testbench
+
+`timescale 1ns/1ps
+module upd_tb1; 
+reg clk,m,rst; 
+wire[3:0] count;
+initial
+begin
+clk=0;
+rst=0;
+end
+upd upd(clk, rst, m, count);
+always #5 clk=-clk;
+initial
+begin
+m=1;
+#500 rst=1;
+#500 m=0;
+#500 rst=0; 
+#2000 $finish; 
+end
+endmodule
+
+#SDC
+
+
+create_clock -name clk -period 2 -waveform {0 1} [get_ports "clk"] 
+set_clock_transition -rise 0.1 [get_clocks "clk"]
+set_clock_transition fall 0.1 [get_clocks "clk"] 
+set_clock_uncertainty 0.01 [get_ports "clk"]
+set_input_delay -max 0.8 [get_ports "rst"] -clock [get_clocks "clk"] 
+set_output_delay -max 0.8 [get_ports "count"] -clock [get_clocks "clk"] 
+set_input_transition 0.12 [all_inputs]
+set_load 0.15 [all_outputs]
+set_max_fanout 30.00 [current_design]
