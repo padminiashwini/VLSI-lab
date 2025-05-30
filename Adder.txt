@@ -1,0 +1,50 @@
+#Design block
+
+timescale 1ns/1ps
+module four_bit (a, b, cin, s, cout); 
+input[3:0]a,b;
+input cin;
+output [3:0]s;
+output cout;
+wire c1, c2, c3;
+full_adder fa0(a[0],b[0],cin, s[0],c1); 
+full_adder fa1(a[1],b[1],cl,s[1], c2); 
+full_adder fa2(a[2],b[2],c2, s[2], c3); 
+full_adder fa3(a[3],b[3],c3, s[3], cout); 
+endmodule
+
+module full_adder(a,b,c,s,cout);
+input a,b,c;
+output s,cout;
+assign s=a^b^c;
+assign cout=(a&b)|(b&c)|(c&a); 
+endmodule
+
+#Testbench
+
+timescale 1ns/1ps
+module add_tb; 
+reg [3:0]a,b; 
+reg cin;
+wire cout;
+wire [3:0]s;
+four_bit uut(a,b,cin, s, cout); 
+initial
+begin
+a=4'b1011;b=4'b0111;cin=1'b0;
+#5 a=4'b0101; b=4'b0001; cin=1'b0; 
+#10 a=4'b1111; b=4'b1111; cin=1'b0; 
+#50 $finish;
+end
+endmodule
+
+#SDC
+
+set_input_delay -max 0.8 [get_ports "a"] 
+set_input_delay -max 0.8 [get_ports "b"] 
+set_input_delay -max 0.8 [get_ports "cin"] 
+set_output_delay -max 0.8 [get_ports "s"] 
+set_output_delay -max 0.8 [get_ports "cout"] 
+set input_transition 0.12 [all_inputs] 
+set load 0.15 [all_outputs] 
+set_max_fanout 30.0 [current_design]
